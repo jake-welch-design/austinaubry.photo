@@ -1,7 +1,7 @@
 /*
 Developed by Jake Welch
 http://www.jakewelch.design/
-19 February 2024
+20 February 2024
 
 Austin Aubry photography portfolio, landing page pixelation animation 
 */
@@ -17,8 +17,8 @@ let desktopRow = 12; // Update for however many images you want in a row on desk
 let mobileRow = 4; // Update for how many you want on one row on mobile.
 
 let padding;
-let paddingDesktop = 20; // Spacing in pixels between images on desktop
-let paddingMobile = 10; // Spacing in pixels between images on mobile
+let paddingDesktop = 20; // Spacing in px between images on desktop
+let paddingMobile = 10; // Spacing in px between images on mobile
 
 // Pixelation animation variables
 let res = 1;
@@ -43,20 +43,24 @@ let imageLinks = [
 ];
 let imagePositions = [];
 
-
+// Preload all the images
 function preload() {
   for (let i = 0; i < numImages; i++) {
     imgs[i] = loadImage(`images/${i}.jpg`);
   }
 }
 
+// Initialize the canvas, all the layout & image sizing
 function setup() {
   createCanvas(windowWidth, windowHeight);
   calculateLayout();
 }
 
+// Draw the display items
 function draw() {
   background(255);
+
+  // Pixelation effect updates
   if (currentResSpeed < maxResSpeed) {
     currentResSpeed += 1;
   }
@@ -64,6 +68,8 @@ function draw() {
     res += currentResSpeed;
     res = min(res, maxRes);
   }
+
+  // Variables to manage rows and positioning
   let xOffset = padding;
   let rowHeights = [];
   let currentRow = 0;
@@ -80,35 +86,45 @@ function draw() {
     xOffset += width + padding;
   });
 
+  // Calculate the total height of the grid
   let totalGridHeight = rowHeights.reduce((acc, curr) => acc + curr, 0) + padding * (rowHeights.length - 1);
+  // Adjust yOffset to center the grid vertically
   let yOffset = (windowHeight - totalGridHeight) / 2;
+
+  // Reset variables for drawing
   xOffset = padding;
   currentRow = 0;
-  
   let accumulatedHeight = yOffset;
+
+  // Draw the images
   imgSizes.forEach(({ width, height }, i) => {
     if (i % imgsPerRow === 0 && i !== 0) {
       currentRow++;
       xOffset = padding; // Reset xOffset for a new row
-      accumulatedHeight += rowHeights[currentRow - 1] + padding; 
+      accumulatedHeight += rowHeights[currentRow - 1] + padding; // Move down by the height of the previous row + padding
     }
 
+    // Resize images dynamically using the pixelation effect
     let dynamicLayer = createGraphics(res, (res / width) * height);
     dynamicLayer.clear();
     dynamicLayer.image(imgs[i], 0, 0, dynamicLayer.width, dynamicLayer.height);
 
+    // Fit the resizing images to the width of the static layer
     let staticLayer = createGraphics(width, height);
     staticLayer.clear();
     staticLayer.noSmooth();
     staticLayer.image(dynamicLayer, 0, 0, staticLayer.width, staticLayer.height);
 
+    // Draw the final images
     image(staticLayer, xOffset, accumulatedHeight);
 
+    // Store the image position for click detection
     imagePositions.push({ x: xOffset, y: yOffset, width, height, link: imageLinks[i] });
     xOffset += width + padding;
 
-    let isHovering = false;
+    let isHovering = false; // Track if the mouse is hovering over any image
 
+    // Hand cursor on hover
     for (let { x, y, width, height } of imagePositions) {
       if (mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height) {
         cursor(HAND); 
@@ -126,11 +142,13 @@ function draw() {
   });
 }
 
+// Window resizing function
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
   calculateLayout();
 }
 
+// Function to calculate layout parameters for desktop & mobile
 function calculateLayout() {
   imgsPerRow = windowWidth < 860 ? mobileRow : desktopRow;
   padding = windowWidth < 860 ? paddingMobile : paddingDesktop;
@@ -172,26 +190,32 @@ function calculateLayout() {
   });
 }
 
+// Link clicking for desktop
 function mousePressed() {
   for (let { x, y, width, height, link } of imagePositions) {
     if (mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height) {
-      window.open(link, "_blank");
+      window.location.href = link;
       break; 
     }
   }
 }
 
+// Link clicking for mobile
 function touchStarted() {
-  let yOffsetCalc = yOffset; 
-  for (let i = 0; i < imagePositions.length; i++) {
-    let { x, y, width, height, link } = imagePositions[i];
-    if (mouseX >= x && mouseX <= x + width && mouseY >= yOffsetCalc && mouseY <= yOffsetCalc + height) {
-      window.open(link, "_blank");
-      return false; 
-    }
-    if (i % columns === columns - 1) { 
-      yOffsetCalc += rowHeights[Math.floor(i / columns)] + padding;
-    }
+  console.log("touchStarted called"); // Check if function is called
+  if (touches.length > 0) {
+      const touchX = touches[0].x;
+      const touchY = touches[0].y;
+      console.log("Touch coordinates:", touchX, touchY); // Log touch coordinates
+
+      for (let i = 0; i < imagePositions.length; i++) {
+          const { x, y, width, height, link } = imagePositions[i];
+          if (touchX >= x && touchX <= x + width && touchY >= y && touchY <= y + height) {
+              console.log("Opening link for image:", i); // Log which image is being clicked
+              window.location.href = link;
+              return false;
+          }
+      }
   }
   return false;
 }
