@@ -21,11 +21,11 @@ let paddingDesktop = 20; // Spacing in px between images on desktop
 let paddingMobile = 10; // Spacing in px between images on mobile
 
 // Pixelation animation variables
-let lowestSpeed = 1; // For controll over the randomness
-let highestSpeed = 2; // For controll over the randomness
+let lowestSpeed = 2; // For controll over the randomness
+let highestSpeed = 3; // For controll over the randomness
 let res = [];
 let currentResSpeeds = [];
-let maxResSpeed = 2; // Increasing this makes the pixelation animation faster (I wouldn't go higher than 20)
+let maxResSpeed = 10; // Increasing this makes the pixelation animation faster (I wouldn't go higher than 20)
 let maxRes;
 
 // Image links (make sure to keep the order of the photos the same as the order of images.)
