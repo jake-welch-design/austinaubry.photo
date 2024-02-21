@@ -21,12 +21,13 @@ let paddingDesktop = 20; // Spacing in px between images on desktop
 let paddingMobile = 10; // Spacing in px between images on mobile
 
 // Pixelation animation variables
-let lowestSpeed = 0.1; // For control over the randomness
+let lowestSpeed = 0.5; // For control over the randomness
 let highestSpeed = 2; // For control over the randomness
 let res = [];
 let currentResSpeeds = [];
 let maxResSpeed = 2; // Increasing this makes the pixelation animation faster (I wouldn't go higher than 20)
 let maxRes;
+let maxResThreshold = 0.3; //if 30% of max res reached, then set image to full res
 
 // Image links (make sure to keep the order of the photos the same as the order of images.)
 let imageLinks = [
@@ -109,7 +110,9 @@ function draw() {
 
     if (res[i] < maxRes) {
       res[i] += currentResSpeeds[i];
-      res[i] = min(res[i], maxRes);
+      if (res[i] / maxRes >= maxResThreshold) {
+        res[i] = maxRes;
+      }
     }
 
     // Resize images dynamically using the pixelation effect with unique speeds
