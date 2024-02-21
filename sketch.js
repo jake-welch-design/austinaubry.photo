@@ -21,8 +21,10 @@ let paddingDesktop = 20; // Spacing in px between images on desktop
 let paddingMobile = 10; // Spacing in px between images on mobile
 
 // Pixelation animation variables
-let res = 1;
-let currentResSpeed = 0.1;
+let lowestSpeed = 1; // For controll over the randomness
+let highestSpeed = 2; // For controll over the randomness
+let res = [];
+let currentResSpeeds = [];
 let maxResSpeed = 2; // Increasing this makes the pixelation animation faster (I wouldn't go higher than 20)
 let maxRes;
 
@@ -38,8 +40,8 @@ let imageLinks = [
   "https://austinaubry.photo/hypebeast-salomon-sportstyle-1", // 7.jpg link
   "https://austinaubry.photo/hypebeast-tommy-hilfiger",       // 8.jpg link
   "https://austinaubry.photo/properties",                     // 9.jpg link
-  "https://austinaubry.photo/musicians-1",                   // 10.jpg link
-  "https://austinaubry.photo/events-1"                       // 11.jpg link
+  "https://austinaubry.photo/musicians-1",                    // 10.jpg link
+  "https://austinaubry.photo/events-1"                        // 11.jpg link
 ];
 let imagePositions = [];
 
@@ -47,12 +49,15 @@ let imagePositions = [];
 function preload() {
   for (let i = 0; i < numImages; i++) {
     imgs[i] = loadImage(`images/${i}.jpg`);
+    res[i] = 1;
+    currentResSpeeds[i] = random(lowestSpeed, highestSpeed);
   }
 }
 
 // Initialize the canvas, all the layout & image sizing
 function setup() {
   createCanvas(windowWidth, windowHeight);
+  frameRate(12);
   calculateLayout();
 }
 
@@ -60,19 +65,11 @@ function setup() {
 function draw() {
   background(255);
 
-  // Pixelation effect updates
-  if (currentResSpeed < maxResSpeed) {
-    currentResSpeed += 1;
-  }
-  if (res < maxRes) {
-    res += currentResSpeed;
-    res = min(res, maxRes);
-  }
-
   // Variables to manage rows and positioning
   let xOffset = padding;
   let rowHeights = [];
   let currentRow = 0;
+
   imgSizes.forEach(({ width, height }, i) => {
     if (i % imgsPerRow === 0 && i !== 0) {
       currentRow++;
@@ -96,16 +93,22 @@ function draw() {
   currentRow = 0;
   let accumulatedHeight = yOffset;
 
-  // Draw the images
+  // Draw the images with random pixelation speeds
   imgSizes.forEach(({ width, height }, i) => {
     if (i % imgsPerRow === 0 && i !== 0) {
       currentRow++;
-      xOffset = padding; // Reset xOffset for a new row
-      accumulatedHeight += rowHeights[currentRow - 1] + padding; // Move down by the height of the previous row + padding
+      xOffset = padding;
+      accumulatedHeight += rowHeights[currentRow - 1] + padding;
     }
 
-    // Resize images dynamically using the pixelation effect
-    let dynamicLayer = createGraphics(res, (res / width) * height);
+    // Update resolution speed and resolution for each image
+    if (res[i] < maxRes) {
+      res[i] += currentResSpeeds[i];
+      res[i] = min(res[i], maxRes);
+    }
+
+    // Resize images dynamically using the pixelation effect with unique speeds
+    let dynamicLayer = createGraphics(res[i], (res[i] / width) * height);
     dynamicLayer.clear();
     dynamicLayer.image(imgs[i], 0, 0, dynamicLayer.width, dynamicLayer.height);
 
@@ -119,27 +122,25 @@ function draw() {
     image(staticLayer, xOffset, accumulatedHeight);
 
     // Store the image position for click detection
-    imagePositions.push({ x: xOffset, y: yOffset, width, height, link: imageLinks[i] });
+    imagePositions.push({ x: xOffset, y: accumulatedHeight, width, height, link: imageLinks[i] }); // Corrected y: accumulatedHeight
     xOffset += width + padding;
-
-    let isHovering = false; // Track if the mouse is hovering over any image
-
-    // Hand cursor on hover
-    for (let { x, y, width, height } of imagePositions) {
-      if (mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height) {
-        cursor(HAND); 
-        isHovering = true;
-        break; 
-      }
-    }
-
-    if (!isHovering) {
-      cursor(ARROW);
-    }
 
     dynamicLayer.remove();
     staticLayer.remove();
   });
+
+  // Hand cursor on hover logic (moved outside the forEach loop for efficiency)
+  let isHovering = false;
+  for (let { x, y, width, height } of imagePositions) {
+    if (mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height) {
+      cursor(HAND);
+      isHovering = true;
+      break;
+    }
+  }
+  if (!isHovering) {
+    cursor(ARROW);
+  }
 }
 
 // Window resizing function
@@ -160,30 +161,30 @@ function calculateLayout() {
   maxRes = dynamicWidth;
 
   let xOffset = padding;
-  let yOffset = 0; 
+  let yOffset = 0;
   let rowHeight = 0;
-  imagePositions = []; 
+  imagePositions = [];
 
   imgs.forEach((img, index) => {
-    if (index % imgsPerRow === 0 && index !== 0) { 
+    if (index % imgsPerRow === 0 && index !== 0) {
       yOffset += rowHeight + padding;
-      rowHeight = 0; 
-      xOffset = padding; 
+      rowHeight = 0;
+      xOffset = padding;
     }
 
     let aspectRatio = img.width / img.height;
     let dynamicHeight = dynamicWidth / aspectRatio;
-    imgSizes[index] = { width: dynamicWidth, height: dynamicHeight }; 
+    imgSizes[index] = { width: dynamicWidth, height: dynamicHeight };
 
-    rowHeight = max(rowHeight, dynamicHeight); 
+    rowHeight = max(rowHeight, dynamicHeight);
 
     imagePositions[index] = { x: xOffset, y: yOffset, width: dynamicWidth, height: dynamicHeight, link: imageLinks[index] };
 
-    xOffset += dynamicWidth + padding; 
+    xOffset += dynamicWidth + padding;
   });
 
-  let totalContentHeight = yOffset + rowHeight; 
-  let startYOffset = (windowHeight - totalContentHeight) / 2; 
+  let totalContentHeight = yOffset + rowHeight;
+  let startYOffset = (windowHeight - totalContentHeight) / 2;
 
   imagePositions.forEach((pos, index) => {
     imagePositions[index].y += startYOffset;
@@ -195,7 +196,7 @@ function mousePressed() {
   for (let { x, y, width, height, link } of imagePositions) {
     if (mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height) {
       window.location.href = link;
-      break; 
+      break;
     }
   }
 }
@@ -204,18 +205,18 @@ function mousePressed() {
 function touchStarted() {
   console.log("touchStarted called"); // Check if function is called
   if (touches.length > 0) {
-      const touchX = touches[0].x;
-      const touchY = touches[0].y;
-      console.log("Touch coordinates:", touchX, touchY); // Log touch coordinates
+    const touchX = touches[0].x;
+    const touchY = touches[0].y;
+    console.log("Touch coordinates:", touchX, touchY); // Log touch coordinates
 
-      for (let i = 0; i < imagePositions.length; i++) {
-          const { x, y, width, height, link } = imagePositions[i];
-          if (touchX >= x && touchX <= x + width && touchY >= y && touchY <= y + height) {
-              console.log("Opening link for image:", i); // Log which image is being clicked
-              window.location.href = link;
-              return false;
-          }
+    for (let i = 0; i < imagePositions.length; i++) {
+      const { x, y, width, height, link } = imagePositions[i];
+      if (touchX >= x && touchX <= x + width && touchY >= y && touchY <= y + height) {
+        console.log("Opening link for image:", i); // Log which image is being clicked
+        window.location.href = link;
+        return false;
       }
+    }
   }
   return false;
 }
