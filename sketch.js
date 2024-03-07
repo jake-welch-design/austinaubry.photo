@@ -96,47 +96,41 @@ function draw() {
   let accumulatedHeight = yOffset;
 
   // Draw the images with random pixelation speeds
-  imgSizes.forEach(({ width, height }, i) => {
-    if (i % imgsPerRow === 0 && i !== 0) {
-      currentRow++;
-      xOffset = padding;
-      accumulatedHeight += rowHeights[currentRow - 1] + padding;
+imgSizes.forEach(({ width, height }, i) => {
+  if (i % imgsPerRow === 0 && i !== 0) {
+    currentRow++;
+    xOffset = padding;
+    accumulatedHeight += rowHeights[currentRow - 1] + padding;
+  }
+
+  if (currentResSpeeds[i] < maxResSpeed) {
+    currentResSpeeds[i] += lowestSpeed;
+  }
+
+  if (res[i] < maxRes) {
+    res[i] += currentResSpeeds[i];
+    if (res[i] / maxRes >= maxResThreshold) {
+      res[i] = maxRes;
     }
+  }
 
-    // Update resolution speed and resolution for each image
-        // Accelerate resolution speed gradually for each image
-    if (currentResSpeeds[i] < maxResSpeed) {
-      currentResSpeeds[i] += lowestSpeed; // Increment speed by a small factor
-    }
+  let dynamicLayer = createGraphics(Math.ceil(res[i]), Math.ceil((res[i] / imgs[i].width) * imgs[i].height));
+  dynamicLayer.image(imgs[i], 0, 0, dynamicLayer.width, dynamicLayer.height);
 
-    if (res[i] < maxRes) {
-      res[i] += currentResSpeeds[i];
-      if (res[i] / maxRes >= maxResThreshold) {
-        res[i] = maxRes;
-      }
-    }
+  let staticLayer = createGraphics(width, height);
+  staticLayer.clear();
+  staticLayer.noSmooth();
+  staticLayer.image(dynamicLayer, 0, 0, width, height);
 
-    // Resize images dynamically using the pixelation effect with unique speeds
-    let dynamicLayer = createGraphics(res[i], (res[i] / width) * height);
-    dynamicLayer.clear();
-    dynamicLayer.image(imgs[i], 0, 0, dynamicLayer.width, dynamicLayer.height);
+  image(staticLayer, xOffset, accumulatedHeight);
 
-    // Fit the resizing images to the width of the static layer
-    let staticLayer = createGraphics(width, height);
-    staticLayer.clear();
-    staticLayer.noSmooth();
-    staticLayer.image(dynamicLayer, 0, 0, staticLayer.width, staticLayer.height);
+  imagePositions[i] = { x: xOffset, y: accumulatedHeight, width, height, link: imageLinks[i] };
 
-    // Draw the final images
-    image(staticLayer, xOffset, accumulatedHeight);
+  xOffset += width + padding;
 
-    // Store the image position for click detection
-    imagePositions.push({ x: xOffset, y: accumulatedHeight, width, height, link: imageLinks[i] }); // Corrected y: accumulatedHeight
-    xOffset += width + padding;
-
-    dynamicLayer.remove();
-    staticLayer.remove();
-  });
+  dynamicLayer.remove();
+  staticLayer.remove();
+});
 
   // Hand cursor on hover logic (moved outside the forEach loop for efficiency)
   let isHovering = false;
