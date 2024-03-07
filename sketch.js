@@ -21,8 +21,8 @@ let paddingDesktop = 20; // Spacing in px between images on desktop
 let paddingMobile = 10; // Spacing in px between images on mobile
 
 // Pixelation animation variables
-let lowestSpeed = 0.2; // For control over the randomness
-let highestSpeed = 5; // For control over the randomness
+let lowestSpeed = 0.3; // For control over the randomness
+let highestSpeed = 3; // For control over the randomness
 let maxResThreshold = 0.2; //if 30% of max res reached, then set image to full res
 
 let maxResSpeed = highestSpeed; 
@@ -87,10 +87,10 @@ function draw() {
 
   // Calculate the total height of the grid
   let totalGridHeight = rowHeights.reduce((acc, curr) => acc + curr, 0) + padding * (rowHeights.length - 1);
+
   // Adjust yOffset to center the grid vertically
   let yOffset = (windowHeight - totalGridHeight) / 2;
 
-  // Reset variables for drawing
   xOffset = padding;
   currentRow = 0;
   let accumulatedHeight = yOffset;
