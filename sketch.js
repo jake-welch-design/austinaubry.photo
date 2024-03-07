@@ -21,8 +21,8 @@ let paddingDesktop = 20; // Spacing in px between images on desktop
 let paddingMobile = 10; // Spacing in px between images on mobile
 
 // Pixelation animation variables
-let lowestSpeed = 0.1; // For control over the randomness
-let highestSpeed = 3; // For control over the randomness
+let lowestSpeed = 0.2; // For control over the randomness
+let highestSpeed = 5; // For control over the randomness
 let maxResThreshold = 0.2; //if 30% of max res reached, then set image to full res
 
 let maxResSpeed = highestSpeed; 
@@ -59,7 +59,7 @@ function preload() {
 // Initialize the canvas, all the layout & image sizing
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  frameRate(12);
+  frameRate(8);
   calculateLayout();
 }
 
