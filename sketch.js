@@ -50,9 +50,16 @@ let imagePositions = [];
 // Preload all the images
 function preload() {
   for (let i = 0; i < numImages; i++) {
-    imgs[i] = loadImage(`images/${i}.jpg`);
-    res[i] = 1;
-    currentResSpeeds[i] = random(lowestSpeed, highestSpeed);
+    imgs[i] = loadImage(`images/${i}.jpg`); // Loading images remains the same
+    res[i] = 1; // Initial resolution
+  }
+
+  // Initialize speeds for each of the three patterns
+  let speeds = [random(lowestSpeed, highestSpeed), random(lowestSpeed, highestSpeed), random(lowestSpeed, highestSpeed)];
+
+  // Assign speeds to images based on their modulo 3 result
+  for (let i = 0; i < numImages; i++) {
+    currentResSpeeds[i] = speeds[i % 3]; // Assigns one of the three speeds based on the image index
   }
 }
 
